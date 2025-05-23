@@ -90,6 +90,33 @@ vector <float> addVectors(vector <float> vecA, vector <float> vecB){
     return result;
 }
 
+// Subtracting two vectors
+vector <float> subVectors(vector <float> vecA, vector <float> vecB){
+    if (vecA.size() != vecB.size()){
+        throw invalid_argument("Dimensions for vector addition doesn't match.");
+    }
+    
+    vector <float> result(vecA.size());
+
+    for (int i = 0; i < vecA.size(); i++){
+        result[i] = vecA[i] - vecB[i];
+    }
+    return result;
+}
+
+// Multiplying two vectors
+vector <float> mulVectors(vector <float> vecA, vector <float> vecB){
+    if (vecA.size() != vecB.size()){
+        throw invalid_argument("Dimensions for vector addition doesn't match.");
+    }
+    
+    vector <float> result(vecA.size());
+
+    for (int i = 0; i < vecA.size(); i++){
+        result[i] = vecA[i] * vecB[i];
+    }
+    return result;
+}
 
 // Relu activation function
 vector<float> ReLU(vector<float> arr){
@@ -111,6 +138,8 @@ vector<float> sigmoid(vector<float> arr){
 
 int main(){
 
+    vector<float> inputs = {1,2,3,4};
+    vector<float> targets = {1,2,3,4};
     // Initialization of weights and biases
     vector<vector<float>> weights_first_layer = generateRandomNormalWeights(4,4);
     vector<float> biases_first_layer = generateRandomNormalBiases(4);  
@@ -119,17 +148,18 @@ int main(){
     vector<float> biases_second_layer = generateRandomNormalBiases(4);
     
     // Feedforward
-    // input layer
-    vector<float> inputs = {1,2,3,4};
-     
-    // hidden layer
+    // Hidden layer
     vector<float> output_first_layer = sigmoid(addVectors(matMultiply(inputs,weights_first_layer),biases_first_layer));
     display(output_first_layer);
     
-    // output layer
+    // Output layer
     vector<float> output_second_layer = sigmoid(addVectors(matMultiply(output_first_layer,weights_second_layer),biases_second_layer));
     display(output_second_layer);
 
+    // Calculating output loss
+    vector<float> loss = subVectors(output_second_layer,targets);
+    vector<float> delta_output_layer = mulVectors(mulVectors(output_second_layer,loss),subVectors({1,1,1,1},output_second_layer));  // (output)delj = Oj(1-Oj)(Oj-tj) for sigmoid
     
+    display(delta_output_layer);
     return 0;
 }
