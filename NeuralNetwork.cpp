@@ -1,6 +1,7 @@
 /*Activation-feedforward-backpropagation*/
 
 #define e 2.718281828459045235360
+#define LEARNING_RATE 0.1
 
 #include <iostream>
 #include <vector>
@@ -131,7 +132,7 @@ vector<float> ReLU(vector<float> arr){
 // Sigmoid activation function
 vector<float> sigmoid(vector<float> arr){
     for (int i = 0; i < arr.size(); i++){
-        arr[i] = 1/(1+pow(e,arr[i]));
+        arr[i] = 1/(1+pow(e,-arr[i]));
     }
     return arr;
 }
@@ -140,6 +141,7 @@ int main(){
 
     vector<float> inputs = {1,2,3,4};
     vector<float> targets = {1,2,3,4};
+
     // Initialization of weights and biases
     vector<vector<float>> weights_first_layer = generateRandomNormalWeights(4,4);
     vector<float> biases_first_layer = generateRandomNormalBiases(4);  
@@ -150,16 +152,33 @@ int main(){
     // Feedforward
     // Hidden layer
     vector<float> output_first_layer = sigmoid(addVectors(matMultiply(inputs,weights_first_layer),biases_first_layer));
+    cout << "Output first layer: ";
     display(output_first_layer);
     
     // Output layer
     vector<float> output_second_layer = sigmoid(addVectors(matMultiply(output_first_layer,weights_second_layer),biases_second_layer));
+    cout << "Output second layer: ";
     display(output_second_layer);
 
     // Calculating output loss
     vector<float> loss = subVectors(output_second_layer,targets);
-    vector<float> delta_output_layer = mulVectors(mulVectors(output_second_layer,loss),subVectors({1,1,1,1},output_second_layer));  // (output)delj = Oj(1-Oj)(Oj-tj) for sigmoid
-    
+    vector<float> delta_output_layer = mulVectors(mulVectors(output_second_layer,loss),subVectors(vector<float>(output_second_layer.size(), 1.0f),output_second_layer));  // (output)delj = Oj(1-Oj)(Oj-tj) for sigmoid
+    cout << "Delta for output layer: ";
     display(delta_output_layer);
+    
+    // Calculating delta for hidden layer
+    vector<float> delta_hidden_layer = mulVectors(output_first_layer,subVectors(vector<float>(output_first_layer.size(), 1.0f),output_first_layer));  // (hidden)delj = Oj(1-Oj)
+
+    for (int j = 0; j < delta_hidden_layer.size(); j++){
+        float sum = 0;
+        for (int k = 0; k < delta_output_layer.size(); k++){
+            sum += weights_second_layer[k][j] * delta_output_layer[k]; 
+        }
+        delta_hidden_layer[j] *= sum;
+    }
+
+    cout << "Delta for hidden layer: ";
+    display(delta_hidden_layer);
+    
     return 0;
 }
