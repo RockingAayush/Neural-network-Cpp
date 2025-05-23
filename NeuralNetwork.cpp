@@ -6,14 +6,50 @@
 #include <vector>
 #include <cmath>
 #include <stdexcept>
+#include <random>
+
 using namespace std;
 
+// Utility functions
 // Display array
 void display(vector<float> arr){
     for (int i = 0; i < arr.size(); i++){
         cout << arr[i] << " "; 
     }
     cout << endl;
+}
+
+// Generate random normal weight matrix
+vector<vector <float>> generateRandomNormalWeights(int rows,int columns){
+    vector<vector <float>> matrix(rows,vector<float>(columns));
+    
+    random_device rd; // obtain a random seed
+    mt19937 gen(42); // Mersenne Twister RNG (Replace 42 by rd() for random number)
+    normal_distribution<float> dist(0.0f, 1.0f); // mean 0, stddev 1
+
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < columns; ++j) {
+            matrix[i][j] = dist(gen);
+        }
+    }
+
+    return matrix;
+}
+
+// Generate random normal bias array
+vector <float> generateRandomNormalBiases(int columns){
+    vector <float> biases(columns,0.0f);
+    
+    random_device rd; // obtain a random seed
+    mt19937 gen(42); // Mersenne Twister RNG (Replace 42 by rd() for random number)
+    normal_distribution<float> dist(0.0f, 1.0f); // mean 0, stddev 1
+
+    
+    for (int j = 0; j < columns; ++j) {
+        biases[j] = dist(gen);
+    }
+
+    return biases;
 }
 
 // Matrix multiplication (A x B)
@@ -40,6 +76,20 @@ vector<float> matMultiply(vector<float> matA, vector<vector<float>> matB){
     return result;
 }
 
+// Adding two vectors
+vector <float> addVectors(vector <float> vecA, vector <float> vecB){
+    if (vecA.size() != vecB.size()){
+        throw invalid_argument("Dimensions for vector addition doesn't match.");
+    }
+    
+    vector <float> result(vecA.size());
+
+    for (int i = 0; i < vecA.size(); i++){
+        result[i] = vecA[i] + vecB[i];
+    }
+    return result;
+}
+
 
 // Relu activation function
 vector<float> ReLU(vector<float> arr){
@@ -61,24 +111,25 @@ vector<float> sigmoid(vector<float> arr){
 
 int main(){
 
-    vector<float> inputs = {1,2,3,4};  // 1x4
-    vector<vector<float>> weights_first_layer = {
-        {-1,0,1,1},
-        {2,2,2,-2},
-        {3,-3,0,3},
-        {4,-4,4,-4}
-    };    // 4x5
-    vector<vector<float>> weights_second_layer = {
-        {-1,0,1,1},
-        {2,2,2,-2},
-        {3,-3,0,3},
-        {4,-4,4,-4}
-    };
+    // Initialization of weights and biases
+    vector<vector<float>> weights_first_layer = generateRandomNormalWeights(4,4);
+    vector<float> biases_first_layer = generateRandomNormalBiases(4);  
+
+    vector<vector<float>> weights_second_layer = generateRandomNormalWeights(4,4);
+    vector<float> biases_second_layer = generateRandomNormalBiases(4);
     
-    vector<float> output_first_layer = sigmoid(matMultiply(inputs,weights_first_layer));
+    // Feedforward
+    // input layer
+    vector<float> inputs = {1,2,3,4};
+     
+    // hidden layer
+    vector<float> output_first_layer = sigmoid(addVectors(matMultiply(inputs,weights_first_layer),biases_first_layer));
     display(output_first_layer);
-    vector<float> output_second_layer = ReLU(matMultiply(output_first_layer,weights_second_layer));
+    
+    // output layer
+    vector<float> output_second_layer = sigmoid(addVectors(matMultiply(output_first_layer,weights_second_layer),biases_second_layer));
     display(output_second_layer);
 
+    
     return 0;
 }
