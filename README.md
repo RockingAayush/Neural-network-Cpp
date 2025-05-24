@@ -1,6 +1,3 @@
-Certainly! Here is a README focused on the learning outcomes from your neural network project, without installation or usage instructions and with minimal code snippets.
-
----
 
 # Neural Network from Scratch in C++: Sine Function Approximation
 
