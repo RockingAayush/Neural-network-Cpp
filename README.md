@@ -51,4 +51,4 @@ vector matMultiply(vector matA, vector> matB) {
    ```
  Observe training dynamics changes from nonlinearity differences.  
 
-This implementation serves as a **conceptual scaffold**—learners can extend it with momentum terms, batch processing, or additional layers while retaining visibility into core mechanics[6][20].
+This implementation serves as a **conceptual scaffold**—learners can extend it with momentum terms, batch processing, or additional layers while retaining visibility into core mechanics.
