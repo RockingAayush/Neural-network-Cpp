@@ -2,7 +2,7 @@
 
 #define e 2.718281828459045235360
 #define LEARNING_RATE 0.01
-
+#define EPOCHS 100
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -129,6 +129,15 @@ vector <float> mulVectors(vector <float> vecA, vector <float> vecB){
     return result;
 }
 
+// Sum of all elements of a vector
+float sumElements(vector <float> arr){
+    float sum = 0;
+    for (int i = 0; i < arr.size(); i++){
+        sum += arr[i];
+    }
+    return sum;
+}
+
 // Relu activation function
 vector<float> ReLU(vector<float> arr){
     for (int i = 0; i < arr.size(); i++){
@@ -149,8 +158,8 @@ vector<float> sigmoid(vector<float> arr){
 
 int main(){
 
-    vector<float> inputs = {1,2,3,4};
-    vector<float> targets = {1,2,3,4};
+    vector<float> inputs  = {0.3f, 0.3f, 0.3f, 0.3f};
+    vector<float> targets = {0.3f, 0.3f, 0.3f, 0.3f};
 
     // Initialization of weights and biases
     vector<vector<float>> weights_first_layer = generateRandomNormalWeights(4,4);
@@ -159,64 +168,61 @@ int main(){
     vector<vector<float>> weights_second_layer = generateRandomNormalWeights(4,4);
     vector<float> biases_second_layer = generateRandomNormalBiases(4);
     
-    cout << "Weights first layer: " << endl;
-    displayMatrix(weights_first_layer);
-    cout << "Biases first layer: " << endl;
-    displayArr(biases_first_layer);
-    cout << endl;
-    cout << "Weights second layer: " << endl;
-    displayMatrix(weights_second_layer);
-    cout << "Biases second layer: " << endl;
-    displayArr(biases_second_layer);
-    cout << endl;
-
-    // Feedforward
-    // Hidden layer
-    vector<float> output_first_layer = sigmoid(addVectors(matMultiply(inputs,weights_first_layer),biases_first_layer));
-    cout << "Output first layer: ";
-    displayArr(output_first_layer);
+    // Training loop
+    for (int i = 1; i <= EPOCHS; i++){
+        // Feedforward
+        // Hidden layer
+        vector<float> output_first_layer = sigmoid(addVectors(matMultiply(inputs,weights_first_layer),biases_first_layer));
+        
+        // Output layer
+        vector<float> output_second_layer = sigmoid(addVectors(matMultiply(output_first_layer,weights_second_layer),biases_second_layer));
     
-    // Output layer
-    vector<float> output_second_layer = sigmoid(addVectors(matMultiply(output_first_layer,weights_second_layer),biases_second_layer));
-    cout << "Output second layer: ";
-    displayArr(output_second_layer);
+        // Calculating output loss
+        vector<float> error = subVectors(output_second_layer,targets);
+        float loss = sumElements(mulVectors(mulVectors(error,error),vector<float>(error.size(),0.5f)));  // Display loss
+        cout << "EPOCH: " << i << " Loss: " << loss << endl;
+        
+        vector<float> delta_output_layer = mulVectors(mulVectors(output_second_layer,error),subVectors(vector<float>(output_second_layer.size(), 1.0f),output_second_layer));  // (output)delj = Oj(1-Oj)(Oj-tj) for sigmoid
+        
+        // Calculating delta for hidden layer
+        vector<float> delta_hidden_layer = mulVectors(output_first_layer,subVectors(vector<float>(output_first_layer.size(), 1.0f),output_first_layer));  // (hidden)delj = Oj(1-Oj)
 
-    // Calculating output loss
-    vector<float> loss = subVectors(output_second_layer,targets);
-    vector<float> delta_output_layer = mulVectors(mulVectors(output_second_layer,loss),subVectors(vector<float>(output_second_layer.size(), 1.0f),output_second_layer));  // (output)delj = Oj(1-Oj)(Oj-tj) for sigmoid
-    cout << "Delta for output layer: ";
-    displayArr(delta_output_layer);
+        for (int j = 0; j < delta_hidden_layer.size(); j++){
+            float sum = 0;
+            for (int k = 0; k < delta_output_layer.size(); k++){
+                sum += weights_second_layer[k][j] * delta_output_layer[k]; 
+            }
+            delta_hidden_layer[j] *= sum;
+        }
+
+        
+        // Weight updation hidden layer
+        for (int i = 0; i < weights_first_layer.size(); i++){
+            for (int j = 0; j < weights_first_layer[0].size(); j++){
+                weights_first_layer[i][j] -= LEARNING_RATE * delta_hidden_layer[j] * inputs[i]; 
+            }
+            biases_first_layer[i] -= LEARNING_RATE * delta_hidden_layer[i];
+        }
+
+        // Weight updation output layer
+        for (int i = 0; i < weights_second_layer.size(); i++){
+            for (int j = 0; j < weights_second_layer[0].size(); j++){
+                weights_second_layer[i][j] -= LEARNING_RATE * delta_output_layer[j] * output_first_layer[i]; 
+            }
+            biases_second_layer[i] -= LEARNING_RATE * delta_output_layer[i];
+        }
+    }
     
-    // Calculating delta for hidden layer
-    vector<float> delta_hidden_layer = mulVectors(output_first_layer,subVectors(vector<float>(output_first_layer.size(), 1.0f),output_first_layer));  // (hidden)delj = Oj(1-Oj)
-
-    for (int j = 0; j < delta_hidden_layer.size(); j++){
-        float sum = 0;
-        for (int k = 0; k < delta_output_layer.size(); k++){
-            sum += weights_second_layer[k][j] * delta_output_layer[k]; 
-        }
-        delta_hidden_layer[j] *= sum;
-    }
-
-    cout << "Delta for hidden layer: ";
-    displayArr(delta_hidden_layer);
     
-    // Weight updation hidden layer
-    for (int i = 0; i < weights_first_layer.size(); i++){
-        for (int j = 0; j < weights_first_layer[0].size(); j++){
-            weights_first_layer[i][j] -= LEARNING_RATE * delta_hidden_layer[j] * inputs[i]; 
-        }
-        biases_first_layer[i] -= LEARNING_RATE * delta_hidden_layer[i];
-    }
+    vector<float> output_first_layer_final = sigmoid(addVectors(matMultiply(inputs,weights_first_layer),biases_first_layer));   
+    vector<float> output_second_layer_final = sigmoid(addVectors(matMultiply(output_first_layer_final,weights_second_layer),biases_second_layer));
+    vector<float> error = subVectors(output_second_layer_final,targets);  //Oj - tj
 
-    // Weight updation output layer
-    for (int i = 0; i < weights_second_layer.size(); i++){
-        for (int j = 0; j < weights_second_layer[0].size(); j++){
-            weights_second_layer[i][j] -= LEARNING_RATE * delta_output_layer[j] * output_first_layer[i]; 
-        }
-        biases_second_layer[i] -= LEARNING_RATE * delta_output_layer[i];
-    }
-
+    float loss = sumElements(mulVectors(mulVectors(error,error),vector<float>(error.size(),0.5f)));  // Display loss
+    cout << "Final Loss: " << loss;
+    
+    // To display updated weights and biases
+    /*
     cout << "Updated weights first layer: " << endl;
     displayMatrix(weights_first_layer);
     cout << "Updated biases first layer: " << endl;
@@ -226,6 +232,8 @@ int main(){
     displayMatrix(weights_second_layer);
     cout << "Updated biases second layer: " << endl;
     displayArr(biases_second_layer);
-    
+    */
+
+
     return 0;
 }
