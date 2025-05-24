@@ -1,8 +1,7 @@
-/*Activation-feedforward-backpropagation*/
-
 #define e 2.718281828459045235360
 #define LEARNING_RATE 0.01
 #define EPOCHS 100
+
 #include <iostream>
 #include <vector>
 #include <cmath>
