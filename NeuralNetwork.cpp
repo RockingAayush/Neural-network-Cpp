@@ -1,238 +1,200 @@
-#define e 2.718281828459045235360
-#define LEARNING_RATE 0.01
-#define EPOCHS 100
-
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <stdexcept>
 #include <random>
+#include <fstream>
+
+#define LEARNING_RATE 0.1f
+#define EPOCHS 5000
 
 using namespace std;
 
 // Utility functions
-// Display array
-void displayArr(vector<float> arr){
-    for (int i = 0; i < arr.size(); i++){
-        cout << arr[i] << " "; 
-    }
-    cout << endl;
-}
-
-// Display matrix
-void displayMatrix(const vector<vector<float>>& matrix) {
-    for (const auto& row : matrix) {
-        for (float val : row) {
-            cout << val << " ";
-        }
-        cout << endl;
-    }
-}
-
-// Generate random normal weight matrix
-vector<vector <float>> generateRandomNormalWeights(int rows,int columns){
-    vector<vector <float>> matrix(rows,vector<float>(columns));
-    
-    random_device rd; // obtain a random seed
-    mt19937 gen(42); // Mersenne Twister RNG (Replace 42 by rd() for random number)
-    normal_distribution<float> dist(0.0f, 1.0f); // mean 0, stddev 1
-
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < columns; ++j) {
-            matrix[i][j] = dist(gen);
-        }
-    }
-
-    return matrix;
-}
-
-// Generate random normal bias array
-vector <float> generateRandomNormalBiases(int columns){
-    vector <float> biases(columns,0.0f);
-    
-    random_device rd; // obtain a random seed
-    mt19937 gen(42); // Mersenne Twister RNG (Replace 42 by rd() for random number)
-    normal_distribution<float> dist(0.0f, 1.0f); // mean 0, stddev 1
-
-    
-    for (int j = 0; j < columns; ++j) {
-        biases[j] = dist(gen);
-    }
-
-    return biases;
-}
-
-// Matrix multiplication (A x B)
-vector<float> matMultiply(vector<float> matA, vector<vector<float>> matB){
-    int matA_rows = 1;
-    int matB_rows = matB.size();
-    int matA_columns = matA.size();
-    int matB_columns = matB[0].size();
-
-    if (matA_columns != matB_rows){
-        throw invalid_argument("Dimensions for matrix multiplication doesn't match.");
-    }
-    
-    vector<float> result(matB_columns,0.0f);
-
-    // Multiplication logic
-    
-    for (int j = 0; j < matB_columns; j++) {    // matB_columns or result columns
-        for (int k = 0; k < matA_columns; k++) {    // shared dimension
-            result[j] += matA[k] * matB[k][j];
-        }
-    }
-    
+vector<vector<float>> transpose(const vector<vector<float>>& mat) {
+    int rows = mat.size();
+    int cols = mat[0].size();
+    vector<vector<float>> result(cols, vector<float>(rows));
+    for (int i = 0; i < rows; ++i)
+        for (int j = 0; j < cols; ++j)
+            result[j][i] = mat[i][j];
     return result;
 }
 
-// Adding two vectors
-vector <float> addVectors(vector <float> vecA, vector <float> vecB){
-    if (vecA.size() != vecB.size()){
-        throw invalid_argument("Dimensions for vector addition doesn't match.");
-    }
-    
-    vector <float> result(vecA.size());
+vector<vector<float>> randomMatrix(int rows, int cols) {
+    random_device rd;
+    mt19937 gen(rd());
+    normal_distribution<float> dist(0.0f, 1.0f);
+    vector<vector<float>> mat(rows, vector<float>(cols));
+    for (auto& row : mat)
+        for (auto& val : row)
+            val = dist(gen);
+    return mat;
+}
 
-    for (int i = 0; i < vecA.size(); i++){
-        result[i] = vecA[i] + vecB[i];
-    }
+vector<float> randomVector(int size) {
+    random_device rd;
+    mt19937 gen(rd());
+    normal_distribution<float> dist(0.0f, 1.0f);
+    vector<float> vec(size);
+    for (auto& val : vec)
+        val = dist(gen);
+    return vec;
+}
+
+vector<float> matMul(const vector<float>& a, const vector<vector<float>>& b) {
+    vector<float> result(b[0].size(), 0.0f);
+    for (int j = 0; j < b[0].size(); ++j)
+        for (int i = 0; i < a.size(); ++i)
+            result[j] += a[i] * b[i][j];
     return result;
 }
 
-// Subtracting two vectors
-vector <float> subVectors(vector <float> vecA, vector <float> vecB){
-    if (vecA.size() != vecB.size()){
-        throw invalid_argument("Dimensions for vector addition doesn't match.");
-    }
-    
-    vector <float> result(vecA.size());
-
-    for (int i = 0; i < vecA.size(); i++){
-        result[i] = vecA[i] - vecB[i];
-    }
+vector<float> add(const vector<float>& a, const vector<float>& b) {
+    vector<float> result(a.size());
+    for (int i = 0; i < a.size(); ++i)
+        result[i] = a[i] + b[i];
     return result;
 }
 
-// Multiplying two vectors
-vector <float> mulVectors(vector <float> vecA, vector <float> vecB){
-    if (vecA.size() != vecB.size()){
-        throw invalid_argument("Dimensions for vector addition doesn't match.");
-    }
-    
-    vector <float> result(vecA.size());
-
-    for (int i = 0; i < vecA.size(); i++){
-        result[i] = vecA[i] * vecB[i];
-    }
+vector<float> subtract(const vector<float>& a, const vector<float>& b) {
+    vector<float> result(a.size());
+    for (int i = 0; i < a.size(); ++i)
+        result[i] = a[i] - b[i];
     return result;
 }
 
-// Sum of all elements of a vector
-float sumElements(vector <float> arr){
+vector<float> multiply(const vector<float>& a, const vector<float>& b) {
+    vector<float> result(a.size());
+    for (int i = 0; i < a.size(); ++i)
+        result[i] = a[i] * b[i];
+    return result;
+}
+
+vector<float> scalarMul(const vector<float>& a, float s) {
+    vector<float> result(a.size());
+    for (int i = 0; i < a.size(); ++i)
+        result[i] = a[i] * s;
+    return result;
+}
+
+float mse(const vector<float>& a, const vector<float>& b) {
     float sum = 0;
-    for (int i = 0; i < arr.size(); i++){
-        sum += arr[i];
+    for (int i = 0; i < a.size(); ++i) {
+        float diff = a[i] - b[i];
+        sum += diff * diff;
     }
-    return sum;
+    return sum / a.size();
 }
 
-// Relu activation function
-vector<float> ReLU(vector<float> arr){
-    for (int i = 0; i < arr.size(); i++){
-    if (arr[i]<0){
-        arr[i] = 0;
-        }
-    }
-    return arr;
+// Activation functions
+vector<float> tanhActivation(const vector<float>& x) {
+    vector<float> y(x.size());
+    for (int i = 0; i < x.size(); ++i)
+        y[i] = tanhf(x[i]);
+    return y;
 }
 
-// Sigmoid activation function
-vector<float> sigmoid(vector<float> arr){
-    for (int i = 0; i < arr.size(); i++){
-        arr[i] = 1/(1+pow(e,-arr[i]));
-    }
-    return arr;
+vector<float> tanhDerivative(const vector<float>& y) {
+    vector<float> dydx(y.size());
+    for (int i = 0; i < y.size(); ++i)
+        dydx[i] = 1 - y[i] * y[i];
+    return dydx;
 }
 
-int main(){
+vector<float> sigmoid(const vector<float>& x) {
+    vector<float> y(x.size());
+    for (int i = 0; i < x.size(); ++i)
+        y[i] = 1.0f / (1.0f + expf(-x[i]));
+    return y;
+}
 
-    vector<float> inputs  = {0.3f, 0.3f, 0.3f, 0.3f};
-    vector<float> targets = {0.3f, 0.3f, 0.3f, 0.3f};
+vector<float> sigmoidDerivative(const vector<float>& y) {
+    vector<float> dydx(y.size());
+    for (int i = 0; i < y.size(); ++i)
+        dydx[i] = y[i] * (1 - y[i]);
+    return dydx;
+}
 
-    // Initialization of weights and biases
-    vector<vector<float>> weights_first_layer = generateRandomNormalWeights(4,4);
-    vector<float> biases_first_layer = generateRandomNormalBiases(4);  
+// Main loop
+int main() {
+    // Dataset
+    vector<vector<float>> inputs;
+    vector<vector<float>> targets;
+    for (int i = 0; i < 100; ++i) {
+        float x = static_cast<float>((2 * M_PI * i) / 100);
+        float y = sinf(x);
+        inputs.push_back({static_cast<float>(x / (2 * M_PI))});  // Normalize x to [0, 1]
+        targets.push_back({(y + 1.0f) / 2.0f});                   // Normalize y to [0, 1]
+    }
 
-    vector<vector<float>> weights_second_layer = generateRandomNormalWeights(4,4);
-    vector<float> biases_second_layer = generateRandomNormalBiases(4);
-    
+    // Neural network architecture
+    int input_size = 1;
+    int hidden_size = 32;
+    int output_size = 1;
+
+    auto w1 = randomMatrix(input_size, hidden_size);
+    auto b1 = randomVector(hidden_size);
+
+    auto w2 = randomMatrix(hidden_size, output_size);
+    auto b2 = randomVector(output_size);
+
     // Training loop
-    for (int i = 1; i <= EPOCHS; i++){
-        // Feedforward
-        // Hidden layer
-        vector<float> output_first_layer = sigmoid(addVectors(matMultiply(inputs,weights_first_layer),biases_first_layer));
-        
-        // Output layer
-        vector<float> output_second_layer = sigmoid(addVectors(matMultiply(output_first_layer,weights_second_layer),biases_second_layer));
-    
-        // Calculating output loss
-        vector<float> error = subVectors(output_second_layer,targets);
-        float loss = sumElements(mulVectors(mulVectors(error,error),vector<float>(error.size(),0.5f)));  // Display loss
-        cout << "EPOCH: " << i << " Loss: " << loss << endl;
-        
-        vector<float> delta_output_layer = mulVectors(mulVectors(output_second_layer,error),subVectors(vector<float>(output_second_layer.size(), 1.0f),output_second_layer));  // (output)delj = Oj(1-Oj)(Oj-tj) for sigmoid
-        
-        // Calculating delta for hidden layer
-        vector<float> delta_hidden_layer = mulVectors(output_first_layer,subVectors(vector<float>(output_first_layer.size(), 1.0f),output_first_layer));  // (hidden)delj = Oj(1-Oj)
+    for (int epoch = 1; epoch <= EPOCHS; ++epoch) {
+        float total_loss = 0;
+        for (int i = 0; i < inputs.size(); ++i) {
+            // Forward
+            auto z1 = add(matMul(inputs[i], w1), b1);
+            auto a1 = tanhActivation(z1);
+            auto z2 = add(matMul(a1, w2), b2);
+            auto a2 = sigmoid(z2);
 
-        for (int j = 0; j < delta_hidden_layer.size(); j++){
-            float sum = 0;
-            for (int k = 0; k < delta_output_layer.size(); k++){
-                sum += weights_second_layer[k][j] * delta_output_layer[k]; 
-            }
-            delta_hidden_layer[j] *= sum;
+            // Loss
+            total_loss += mse(a2, targets[i]);
+
+            // Backpropagation
+            auto d_a2 = multiply(subtract(a2, targets[i]), sigmoidDerivative(a2));
+            auto d_a1_raw = matMul(d_a2, transpose(w2));
+            auto d_a1 = multiply(d_a1_raw, tanhDerivative(a1));
+
+            // Update weights and biases (output layer)
+            for (int j = 0; j < hidden_size; ++j)
+                for (int k = 0; k < output_size; ++k)
+                    w2[j][k] -= LEARNING_RATE * d_a2[k] * a1[j];
+
+            for (int k = 0; k < output_size; ++k)
+                b2[k] -= LEARNING_RATE * d_a2[k];
+
+            // Update weights and biases (hidden layer)
+            for (int j = 0; j < input_size; ++j)
+                for (int k = 0; k < hidden_size; ++k)
+                    w1[j][k] -= LEARNING_RATE * d_a1[k] * inputs[i][j];
+
+            for (int k = 0; k < hidden_size; ++k)
+                b1[k] -= LEARNING_RATE * d_a1[k];
         }
 
-        
-        // Weight updation hidden layer
-        for (int i = 0; i < weights_first_layer.size(); i++){
-            for (int j = 0; j < weights_first_layer[0].size(); j++){
-                weights_first_layer[i][j] -= LEARNING_RATE * delta_hidden_layer[j] * inputs[i]; 
-            }
-            biases_first_layer[i] -= LEARNING_RATE * delta_hidden_layer[i];
-        }
-
-        // Weight updation output layer
-        for (int i = 0; i < weights_second_layer.size(); i++){
-            for (int j = 0; j < weights_second_layer[0].size(); j++){
-                weights_second_layer[i][j] -= LEARNING_RATE * delta_output_layer[j] * output_first_layer[i]; 
-            }
-            biases_second_layer[i] -= LEARNING_RATE * delta_output_layer[i];
-        }
+        if (epoch % 50 == 0 || epoch == 1)
+            cout << "Epoch " << epoch << " Loss: " << total_loss / inputs.size() << endl;
     }
-    
-    
-    vector<float> output_first_layer_final = sigmoid(addVectors(matMultiply(inputs,weights_first_layer),biases_first_layer));   
-    vector<float> output_second_layer_final = sigmoid(addVectors(matMultiply(output_first_layer_final,weights_second_layer),biases_second_layer));
-    vector<float> error = subVectors(output_second_layer_final,targets);  //Oj - tj
 
-    float loss = sumElements(mulVectors(mulVectors(error,error),vector<float>(error.size(),0.5f)));  // Display loss
-    cout << "Final Loss: " << loss;
-    
-    // To display updated weights and biases
-    /*
-    cout << "Updated weights first layer: " << endl;
-    displayMatrix(weights_first_layer);
-    cout << "Updated biases first layer: " << endl;
-    displayArr(biases_first_layer);
-    cout << endl;
-    cout << "Updated weights second layer: " << endl;
-    displayMatrix(weights_second_layer);
-    cout << "Updated biases second layer: " << endl;
-    displayArr(biases_second_layer);
-    */
+    // Saving predictions
+    ofstream outfile("predictions.csv");
+    outfile << "x,sin_x,predicted\n";
 
+    for (int i = 0; i <= 100; i++) {
+        float x = (2 * M_PI * i) / 100;
+        float x_norm = x / (2 * M_PI);
 
+        auto a1 = tanhActivation(add(matMul({x_norm}, w1), b1));
+        auto a2 = sigmoid(add(matMul(a1, w2), b2));
+
+        float y_pred = 2.0f * a2[0] - 1.0f;  // Denormalize
+        float y_actual = sin(x);
+
+        outfile << x << "," << y_actual << "," << y_pred << "\n";
+    }
+
+    outfile.close();
+    cout << "\nSaved predictions to predictions.csv\n";
     return 0;
 }
