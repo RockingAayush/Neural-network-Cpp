@@ -1,54 +1,30 @@
-# C++ Neural Network Implementation for Educational Purposes  
+Certainly! Here is a README focused on the learning outcomes from your neural network project, without installation or usage instructions and with minimal code snippets.
 
-This compact C++ implementation demonstrates core neural network mechanics through clean, didactic code—ideal for understanding fundamental machine learning concepts without framework abstractions.  
+---
 
-## Pedagogical Value  
+# Neural Network from Scratch in C++: Sine Function Approximation
 
-The project emphasizes **algorithmic transparency** by implementing:  
+## Overview
 
-1. **Forward Propagation**  
-   ```cpp  
-   // Matrix multiplication and activation application  
-   vector output_first_layer = sigmoid(  
-       addVectors(matMultiply(inputs, weights_first_layer), biases_first_layer)  
-   );  
-   ```
- Shows raw matrix operations for layer computations, clarifying how inputs transform through weights/biases.  
+This project implements a simple feedforward neural network in C++ to approximate the sine function over one period. The network consists of an input layer, a hidden layer with 32 neurons, and an output layer. Training is performed using gradient descent with backpropagation, and predictions are visualized using a Python script.
 
-2. **Backpropagation Mechanics**  
-   ```cpp  
-   // Output layer delta calculation  
-   vector delta_output_layer = mulVectors(  
-       mulVectors(output_second_layer, error),  
-       subVectors(vector(output_second_layer.size(), 1.0f), output_second_layer)  
-   );  
-   ```
- Explicitly computes gradients using chain rule derivatives, revealing how networks adjust parameters.  
+## Project Structure
 
-3. **Gradient Descent Implementation**  
-   ```cpp  
-   // Weight update logic  
-   weights_first_layer[i][j] -= LEARNING_RATE * delta_hidden_layer[j] * inputs[i];  
-   biases_first_layer[i] -= LEARNING_RATE * delta_hidden_layer[i];  
-   ```
- Demonstrates parameter optimization without black-box optimizers.  
+- **NeuralNetwork.cpp**: Core C++ implementation of the neural network, including utility functions for matrix operations, activation functions (tanh and sigmoid), and the main training loop.
+- **predictions.csv**: Output file containing the predicted and actual values of the sine function.
+- **visualizer.py**: Script to plot the predicted values against the ground truth.
 
-## Code Organization  
+## Learning Outcomes
 
-### Core Components  
-**Mathematical Operations Library**  
-```cpp  
-vector matMultiply(vector matA, vector> matB) {  
-    // Implements matrix multiplication  
-    for(int j=0; j weights_first_layer = generateRandomNormalWeights(INPUT_SIZE, HIDDEN_SIZE);  
-   ```
- Adjust `INPUT_SIZE`/`HIDDEN_SIZE` to explore underfitting/overfitting.  
+- **Understanding Neural Network Fundamentals**: Learned how neural networks model non-linear functions by combining linear transformations and activation functions. Explored the structure and flow of data through input, hidden, and output layers.
+- **Matrix Operations in C++**: Gained hands-on experience with matrix and vector operations using C++ standard library containers. Implemented custom functions for matrix multiplication, addition, subtraction, and transposition.
+- **Activation Functions**: Explored the role of activation functions like tanh and sigmoid in introducing non-linearity and enabling the network to approximate complex functions.
+- **Loss Functions and Training**: Implemented mean squared error (MSE) as the loss function and trained the network using gradient descent with backpropagation. Learned how to update weights and biases based on the computed gradients.
+- **Backpropagation**: Developed an understanding of how error is propagated backward through the network to adjust weights and biases, improving the model’s predictions over time.
+- **Data Preprocessing and Normalization**: Practiced normalizing input and output data to improve training stability and convergence.
+- **Visualization**: Used Python and matplotlib to visualize the network’s predictions compared to the actual sine function, reinforcing the importance of model evaluation and interpretation.
+- **Challenges and Insights**: Encountered and addressed challenges related to weight initialization, learning rate selection, and the impact of network architecture on model performance. Learned that even simple networks can approximate non-linear functions, but tuning hyperparameters and architecture is crucial for good results.
 
-2. **Activation Function Comparison**  
-   Replace `sigmoid` with `ReLU` in forward passes:  
-   ```cpp  
-   vector output_first_layer = ReLU(...);  
-   ```
- Observe training dynamics changes from nonlinearity differences.  
+## Conclusion
 
-This implementation serves as a **conceptual scaffold**—learners can extend it with momentum terms, batch processing, or additional layers while retaining visibility into core mechanics.
+This project provided a solid foundation in implementing neural networks from scratch, deepening my understanding of both the theory and practical aspects of machine learning in C++. It also highlighted the importance of experimentation and visualization in developing and evaluating machine learning models.
