@@ -22,6 +22,9 @@ This project implements a simple feedforward neural network in C++ to approximat
 - **Visualization**: Used Python and matplotlib to visualize the network’s predictions compared to the actual sine function, reinforcing the importance of model evaluation and interpretation.
 - **Challenges and Insights**: Encountered and addressed challenges related to weight initialization, learning rate selection, and the impact of network architecture on model performance. Learned that even simple networks can approximate non-linear functions, but tuning hyperparameters and architecture is crucial for good results.
 
+## Results
+![results include target vs the predicted value](results.png)
+
 ## Conclusion
 
 This project provided a solid foundation in implementing neural networks from scratch, deepening my understanding of both the theory and practical aspects of machine learning in C++. It also highlighted the importance of experimentation and visualization in developing and evaluating machine learning models.
